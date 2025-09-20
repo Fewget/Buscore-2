@@ -1,0 +1,285 @@
+<?php
+session_start();
+// Define the base directory
+$base_dir = __DIR__;
+
+// Include configuration and functions
+require_once $base_dir . '/includes/config.php';
+require_once $base_dir . '/includes/functions.php';
+
+// Check if user is logged in and is a bus owner
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['redirect_url'] = '/BS/add-bus.php';
+    header('Location: /BS/login.php');
+    exit();
+}
+
+if ($_SESSION['role'] !== 'bus_owner') {
+    header('Location: /BS/index.php?error=access_denied');
+    exit();
+}
+
+$success = false;
+$error = '';
+$user_id = $_SESSION['user_id'];
+$company_name = '';
+
+// Get owner's company name if exists
+$stmt = $pdo->prepare("SELECT company_name FROM bus_owners WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$owner_data = $stmt->fetch();
+
+if ($owner_data && !empty($owner_data['company_name'])) {
+    $company_name = $owner_data['company_name'];
+}
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Process form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Log form data for debugging
+    error_log('Form submitted with POST data: ' . print_r($_POST, true));
+    
+    // Get and sanitize form data
+    $registration_number = trim($_POST['registration_number'] ?? '');
+    $bus_name = trim($_POST['bus_name'] ?? '');
+    $route_number = trim($_POST['route_number'] ?? '');
+    $route_description = trim($_POST['route_description'] ?? '');
+    $company_name = trim($_POST['company_name'] ?? '');
+    
+    // Log the received data
+    error_log("Processing bus add request for registration: $registration_number");
+    
+    // Basic validation
+    if (empty($registration_number) || empty($company_name)) {
+        $error = 'Registration number and company name are required.';
+    } elseif (!validate_registration_number($registration_number)) {
+        $error = 'Please enter a valid registration number (e.g., NA-1234 or 62-1234).';
+    } else {
+        // Format registration number
+        $registration_number = format_registration_number($registration_number);
+        
+        // Check if bus with this registration number already exists
+        $checkStmt = $pdo->prepare("SELECT id FROM buses WHERE registration_number = ?");
+        $checkStmt->execute([$registration_number]);
+        
+        if ($checkStmt->rowCount() > 0) {
+            // Bus with this registration number exists, redirect to claim page
+            $_SESSION['bus_form_data'] = [
+                'registration_number' => $registration_number,
+                'bus_name' => $bus_name,
+                'route_number' => $route_number,
+                'route_description' => $route_description,
+                'company_name' => $company_name
+            ];
+            header('Location: /BS/bus-owner/claim-bus.php?reg=' . urlencode($registration_number));
+            exit();
+        }
+        
+        // Make bus name NULL if empty
+        $bus_name = !empty($bus_name) ? $bus_name : NULL;
+        try {
+            // Start transaction
+            $pdo->beginTransaction();
+            
+            // Log the SQL query being prepared
+            $sql = "INSERT INTO buses (registration_number, bus_name, route_number, route_description, company_name, user_id) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
+            error_log("Preparing SQL: $sql");
+            
+            // Prepare and execute the statement
+            $stmt = $pdo->prepare($sql);
+            $params = [
+                $registration_number,
+                $bus_name,
+                $route_number,
+                $route_description,
+                $company_name,
+                $user_id
+            ];
+            
+            error_log("Executing with params: " . print_r($params, true));
+            $result = $stmt->execute($params);
+            
+            if ($result) {
+                $pdo->commit();
+                $success = true;
+                $_SESSION['success'] = 'Bus added successfully!';
+                error_log("Bus added successfully: $registration_number");
+                header('Location: dashboard.php?success=bus_added');
+                exit();
+            } else {
+                throw new Exception("Failed to execute insert query");
+            }
+            
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            $error = 'Database error: ' . $e->getMessage();
+            error_log("Database Error: " . $e->getMessage());
+            error_log("Error Code: " . $e->getCode());
+            error_log("SQL State: " . $e->errorInfo[0]);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = 'An error occurred: ' . $e->getMessage();
+            error_log("General Error: " . $e->getMessage());
+        }
+    }
+}
+
+$page_title = 'Add New Bus - ' . SITE_NAME;
+?>
+
+<?php include $base_dir . '/includes/header.php'; ?>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-bus me-2"></i> Add New Bus
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <?php if ($success): ?>
+                        <div class="alert alert-success">
+                            <h4><i class="fas fa-check-circle"></i> Bus Added Successfully!</h4>
+                            <p class="mb-0">Your bus has been added to the system.</p>
+                            <div class="mt-3">
+                                <a href="add-bus.php" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-plus-circle me-1"></i> Add Another Bus
+                                </a>
+                                <a href="dashboard.php" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-1"></i> Go to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php if ($error): ?>
+                            <div class="alert alert-danger">
+    <h5><i class="fas fa-exclamation-triangle"></i> Error</h5>
+    <p class="mb-0"><?php echo htmlspecialchars($error); ?></p>
+    <?php if (isset($e)): ?>
+        <hr>
+        <p class="small text-muted mb-0">
+            Error Code: <?php echo $e->getCode(); ?><br>
+            <?php if (isset($e->errorInfo)): ?>
+                SQL State: <?php echo $e->errorInfo[0]; ?>
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
+</div>
+                        <?php endif; ?>
+                        
+                        <form method="post" action="add-bus.php" class="needs-validation" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="company_name" class="form-label">Company Name *</label>
+                                    <input type="text" class="form-control" id="company_name" 
+                                           name="company_name" required value="<?php echo htmlspecialchars($company_name); ?>">
+                                    <div class="invalid-feedback">Please enter your company name.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="bus_name" class="form-label">Bus Name <small class="text-muted">(Optional)</small></label>
+                                    <input type="text" class="form-control" id="bus_name" name="bus_name" 
+                                           value="<?php echo htmlspecialchars($_POST['bus_name'] ?? ''); ?>"
+                                           placeholder="e.g., Nelum Kumari">
+                                    <div class="form-text">Leave blank if you don't have a specific name for this bus.</div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="registration_number" class="form-label">Registration Number *</label>
+                                    <input type="text" class="form-control" id="registration_number" 
+                                           name="registration_number" required 
+                                           pattern="([A-Za-z]{2}-?\d{4}|\d{2}-?\d{4})"
+                                           placeholder="e.g., NA-1234 or 62-1234"
+                                           oninput="formatRegistrationNumber(this)">
+                                    <div class="invalid-feedback">Please enter a valid registration number (e.g., NA-1234 or 62-1234).</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="route_number" class="form-label">Route Number <small class="text-muted">(Optional)</small></label>
+                                    <input type="text" class="form-control" id="route_number" 
+                                           name="route_number"
+                                           placeholder="1">
+                                    <div class="form-text">Leave blank if not applicable.</div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="route_description" class="form-label">Route Description</label>
+                                    <textarea class="form-control" id="route_description" 
+                                              name="route_description" rows="3" 
+                                              placeholder="e.g., From City A to City B via Highway 1"></textarea>
+                                </div>
+                                
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Save Bus Details
+                                    </button>
+                                    <a href="dashboard.php" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Format registration number as user types
+function formatRegistrationNumber(input) {
+    // Remove any non-alphanumeric characters
+    let value = input.value.replace(/[^a-zA-Z0-9]/g, '');
+    
+    // If we have 6 characters, insert a dash after the first 2
+    if (value.length > 2 && value.length <= 6) {
+        value = value.substring(0, 2) + '-' + value.substring(2);
+    }
+    
+    // Update the input value
+    input.value = value.toUpperCase();
+}
+
+// Form validation
+(function () {
+    'use strict'
+    
+    // Make bus name not required
+    document.addEventListener('DOMContentLoaded', function() {
+        const busNameField = document.getElementById('bus_name');
+        if (busNameField) {
+            busNameField.required = false;
+        }
+        
+        // Format registration number on page load if it exists
+        const regNumberField = document.getElementById('registration_number');
+        if (regNumberField && regNumberField.value) {
+            formatRegistrationNumber(regNumberField);
+        }
+    });
+
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation');
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+
+<?php include $base_dir . '/includes/footer.php'; ?>

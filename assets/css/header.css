@@ -1,0 +1,213 @@
+/* Header Styles */
+.header {
+    background-color: var(--bs-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    transition: all 0.3s ease;
+}
+
+/* Top Bar */
+.top-bar {
+    background-color: var(--bs-primary);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Logo/Brand */
+.brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+    transition: opacity 0.2s;
+}
+
+.brand:hover {
+    color: white;
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+.brand i {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+}
+
+/* Navigation */
+.main-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.main-nav .nav-link:hover,
+.main-nav .nav-link:focus {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.main-nav .nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* Active State */
+.main-nav .nav-link.active {
+    color: white;
+    font-weight: 600;
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 12rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    color: var(--bs-gray-800);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-item i {
+    width: 1.25rem;
+    text-align: center;
+    margin-right: 0.75rem;
+    color: var(--bs-gray-600);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--bs-light);
+    color: var(--bs-primary);
+}
+
+.dropdown-item:hover i,
+.dropdown-item:focus i {
+    color: var(--bs-primary);
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    color: white;
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* User Dropdown */
+.user-dropdown .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    transition: all 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-dropdown .dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Search Bar */
+.search-bar {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 0;
+}
+
+.search-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .main-nav {
+        padding: 1rem 0;
+    }
+    
+    .main-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        margin-top: 0;
+        padding: 0;
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem 1.5rem;
+    }
+}
+
+/* Animation for mobile menu */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu.show {
+    animation: slideIn 0.2s ease-out;
+}

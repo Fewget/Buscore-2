@@ -1,0 +1,60 @@
+[Log file created at 2025-09-11 10:16:47]
+[Test message at 2025-09-11 10:16:47] Test writing to log file
+[11-Sep-2025 13:55:20 Asia/Colombo] === New Form Submission ===
+[11-Sep-2025 13:55:20 Asia/Colombo] POST data: Array
+(
+    [registration_number] => NC-1233
+    [driver_rating] => 3
+    [conductor_rating] => 3
+    [bus_condition_rating] => 2
+)
+
+[11-Sep-2025 13:55:20 Asia/Colombo] POST data: Array
+(
+    [registration_number] => NC-1233
+    [driver_rating] => 3
+    [conductor_rating] => 3
+    [bus_condition_rating] => 2
+)
+
+[11-Sep-2025 14:02:34 Asia/Colombo] === New Form Submission ===
+[11-Sep-2025 14:02:34 Asia/Colombo] POST data: Array
+(
+    [registration_number] => NC-1233
+    [driver_rating] => 2
+    [conductor_rating] => 2
+    [bus_condition_rating] => 2
+)
+
+[11-Sep-2025 14:02:34 Asia/Colombo] POST data: Array
+(
+    [registration_number] => NC-1233
+    [driver_rating] => 2
+    [conductor_rating] => 2
+    [bus_condition_rating] => 2
+)
+
+[11-Sep-2025 14:02:34 Asia/Colombo] PHP Warning:  Undefined array key "condition_rating" in C:\xampp\htdocs\BS\debug_bus_submit.php on line 96
+[11-Sep-2025 14:02:34 Asia/Colombo] Database Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'driver_rating' in 'field list'
+[11-Sep-2025 14:02:34 Asia/Colombo] SQL State: 42S22
+[11-Sep-2025 14:02:34 Asia/Colombo] Error Info: Array
+(
+    [0] => 00000
+    [1] => 
+    [2] => 
+)
+
+[11-Sep-2025 14:02:34 Asia/Colombo] Sending response: Array
+(
+    [status] => error
+    [message] => Database error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'driver_rating' in 'field list'
+    [error_info] => Array
+        (
+            [0] => 00000
+            [1] => 
+            [2] => 
+        )
+
+)
+
+[Test] PHP is working correctly at 2025-09-11 10:37:02
